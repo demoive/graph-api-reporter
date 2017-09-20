@@ -4,6 +4,10 @@ A Google Sheets Add-on that interfaces with the Facebook Graph API to generate c
 
 [Download/Install](https://chrome.google.com/webstore/detail/graph-api-reporter/nkjmcoelgkeajhibgjhckeeighoggbbe) it as a Google Sheets Add-on from the Chrome Webstore
 
+![Demo of the Data Vu Widget in action](https://demoive.github.io/graph-api-reporter/demo.png)
+
+> The Google Apps Script environment has it’s own internal version control system which is all managed through the Apps Script editor. It doesn’t play nice with external repositories — e.g. it doesn’t support folder structures and has limits in how you can commit code, etc. The `origin` for the project is currently scoped within the Apps Script project itself — this repo is simply a duplicate of the latest version to expose it publicly.
+
 <!--
 ## Available Reports
 
