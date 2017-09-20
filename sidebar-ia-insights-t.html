@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons1.css">
+  <style>
+  #page-picture {
+    margin-bottom: -9px;
+    width: 25px;
+  }
+  .branding-below {
+    bottom: 56px;
+    top: 0;
+  }
+  .fb-profile-card {
+    margin-top: 3px;
+  }
+  .fb-profile-card img {
+    width: 20px;
+    vertical-align: bottom;
+  }
+  .fb-profile-card-logout {
+    display: none;
+    float: right;
+  }
+  .sidebar.bottom:hover .fb-profile-card-logout {
+    display: block;
+  }
+  .date-shortcut {
+    display: none;
+    float: right;
+    font-size: smaller;
+  }
+  .form-group:hover .date-shortcut {
+    display: inline;
+  }
+  #throbber {
+    display: none;
+    height: 15px;
+    vertical-align: middle;
+  }
+  </style>
+</head>
+<body>
+
+
+  <div class="sidebar branding-below">
+  <form>
+    <div class="block">
+      <div class="inline form-group">
+        <label for="scope">Report Type</label>
+        <select name="scope">
+          <option value="aggregate">Page aggregate</option>
+          <!-- <option value="single" disabled>Single article</option> -->
+          <option value="single">Single article</option>
+          <option value="recent-n">Most recent N articles</option>
+          <!-- https://developers.facebook.com/docs/graph-api/making-multiple-requests/ -->
+          <!--
+          <option value="top-n">Top N articles</option>
+          -->
+        </select>
+      </div>
+      <div class="inline form-group" data-hidden-scopes="aggregate single">
+        <label for="number-n">How Many?</label>
+        <input type="number" name="number-n" style="width:60px;" value="15">
+      </div>
+    </div>
+
+    <div class="block form-group" data-hidden-scopes="aggregate recent-n top-n">
+      <label for="canonical-url">Article URL</label>
+      <input type="text" name="canonical-url" style="width:100%">
+    </div>
+
+    <div class="block" data-hidden-scopes="single">
+      <div class="inline form-group">
+        <label for="page">Page</label>
+        <select name="page">
+          <? var accounts = me.accounts.data; ?>
+          <? for (var i = 0; i < accounts.length; ++i) { ?>
+            <? var page = accounts[i]; ?>
+            <!-- if (page.supports_instant_articles) { ?> -->
+              <option <? if(!page.supports_instant_articles){ ?>disabled<? } ?> value="<?= page.id ?>" data-picture="<?= page.picture.data.url ?>" data-link="<?= page.link ?>"><?= page.name ?></option>
+          <? } ?>
+          <option value="" data-picture="" data-link="">[Input Page ID Manually]</option>
+        </select>
+      </div>
+      <div class="inline form-group">
+        <a target="_blank">
+          <img id="page-picture">
+        </a>
+      </div>
+    </div>
+
+    <div class="block form-group">
+      <input type="hidden" name="page-id" placeholder="Page ID" style="width:75%">
+    </div>
+
+    <div class="block form-group">
+      <label for="metric">Metric</label>
+      <select name="metric">
+        <option value="all_views">Views (daily)</option>
+        <option value="all_view_durations_average">Time spent (weekly avg)</option>
+        <option value="all_scrolls_average">Scroll depth (weekly avg)</option>
+      </select>
+    </div>
+
+    <div class="block">
+      <div class="inline form-group">
+        <label for="rangeStart">
+          From
+          <small class="date-shortcut">
+            (<a data-date-offset="-8">-1w</a>, <a data-date-offset="-1">-1d</a>)
+          </small>
+        </label>
+        <input type="date" name="rangeStart" style="width:130px;">
+      </div>
+      <div class="inline form-group">
+        <label for="rangeEnd">
+          To
+          <small class="date-shortcut">
+            (<a data-date-offset="-1">-1d</a>, <a data-date-offset="0">today</a>)
+          </small>
+        </label>
+        <input type="date" name="rangeEnd" style="width:130px;">
+      </div>
+    </div>
+
+    <div class="block form-group">
+      <input type="button" value="Fetch Data" name="submit" class="blue">
+      <!-- <button name="submit" class="blue" onclick="google.script.run.generateReport(this.form)">Fetch Data</button> -->
+      <input type="button" value="Save Report" name="save" class="green" onclick="google.script.run.saveReport()">
+      <!-- <input type="button" value="Close" name="close" onclick="google.script.host.close()"> -->
+      <img id="throbber" src="data:image/gif;base64,R0lGODlhIAAeAPMIAO/y9vDy9vDz9/Hz9/H0+PL0+PP1+PT2+f///wAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAULAAgAIf8LTkVUU0NBUEUyLjADAQAAACwAAAQAIAAWAAAEpxDJSau9OOvNu/9YMQgAIAgFNazlmk5i2RbieRKEygLroA+8nolGO1GChwPruEruBMlDgcSMxpiGKHCoBWCThtL3EC6hnMAjr6vOkrdQ9mQNTs8H7jKv4BTf+W9ed3lwVn4Se2CHCCV5MmdSdogDgGVtdWaAV3MAlWFjBkAnNEorTHwGoYKTqalAPbAvErA8oRQirz0xMpS3WzIGFKW8siDGx8jJyh4RACH5BAgLAAAALAAABQALAB4AhE1rpU5spU9tplVyqVZyqVdzqVx3q1x3rGR9r2R+r2V+r2Z/sGiAsWiBsWmBsmmCsmyDsm6Gs2+Gs3OJtXaMuH+TvX+UvYCUvYKWvoyew46gxJChxZKjxgAAAAAAAAAAAAWL4BQlhQAIBhKJUHIU8JE4Y7I4OJ7sheFQl4uF4jCUCo5KZpOxOEoA5EWz0VyeAgFSyXSWtMll5vrdiitYMDeDLoeZ7awZnp6z6++7W6nRy/Nxamd4a4F2hoCEGX1ef4WKdG4Wg2UMFhocVpBjWD0MQBcVFAxGCDY5Dgw7Kg4IRjAGCRErEq4mWrITIQAh+QQJCwAiACwAAAQAIAAWAIVPbaZQbaZQbqZYdKpfeq1feq5geq5ifK5ngLBpgrFyibV0i7d9krx+k7x/k72OoMSPocWQocWcq8qdq8qdq8uhr82lss+ms8+otdGqttGuutSwu9S1v9e1wNe2wNe+x9y/x9y/yNz///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG3kCRcEgUKhIDAGCQUBSf0GcCcTAYDohElKjJVCSSSkZDHBwWDsfiMNgOMxmL3AInCgyMSIRhALiFFRYbHh4bFhV2eA97BgJ/IhIWHiAhHhYSiQwPD3yOf5EcICCWFJmbnY8UFqGjFqVDd5qcjamSIB8cl6aznm6qrLmYsIq8j6Ciua9Csae0n6uipLuozxwfuK7Tzr7Q2MLLxNTck97avVuqkyDB5saSIZW6w7LiWxUXg4WHmRHFf3AX5FyoA6tAHkbnonT5EmZMmTNp1rR59GdKlStZKP45kmRJk0dBAAAh+QQJCwAwACwAAAQAIAAWAIVPbaZQbaZQbqZYdKpfeq1feq5geq5ifK5ngLBpgrFyibV0i7d9krx+k7x/k72OoMSPocWQocWcq8qdq8qdq8uhr82lss+ms8+otdGqttGuutSwu9S1v9e1wNe2wNe+x9y/x9y/yNzf5e7g5e7h5u/i5+/j5/Dj6PDk6PDl6fHm6vLn6/Lo6/Pq7fTr7fTr7vT///8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG/kCYcEgsGoeKxAAAGCQUx6g0gTgYCgdEQjrUZCoUSiWjIQ4Oi0ZjcRhwhZmMZW6JEwOFRiTSKABSJyUiIiUnKUQVFhsdHRsWFUQAeQ98fikmJSklJicnRBQWHSAhHRYUd5MPDQYBJZksLJolnxYcICAcpncGDQ+qrIQsLy+aIrQcH7i6QwG8vqsBhCnDLCbGQ6DIpMtCzb2qftLUmMcgH6WnzM6/rSbCxILHH+fcMM0Oz8Duw8Xy9Ond1kELxs+Vv1wA7RVg4ItBgWgl3rGIh63WPISoGLIT94LFiWtCspnDqE4jNFcpYF2aVVHUv13foF3C5MrEoZYhtiX09uwhNSBBhAwhurCo0SOYEdi9gRGHTp0MSPkYALDUCxgxZMygcbCmzdKlVA4UMJBly1cuSZY0eRIEACH5BAkLACYALAAABAAgABYAhZyryp2ryp2ry6GvzaWyz6azz6i10aq20a661LC71LW/17XA17bA177H3L/H3L/I3N/l7uDl7uHm7+Ln7+Pn8OPo8OTo8OXp8ebq8ufr8ujr8+rt9Ovt9Ovu9O/y9vDy9vDz9/Hz9/H0+PL0+PP1+PT2+f///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAb+QJNwSCwaj8ikcslUIg4DAGBwQDSXh0NhW8iOQiCPBwQaETEVCQQiqWCIg0KCoUgUBl8yWSQiVioTgYBvQwAFDA0NCgUAYyOPI2REEhMYGhoYExJEhgqJi40gJaORHkQQExodHRoTEJwFnoqMjqMlIaZDqKqsarCyCgShI6MhuKepqxoSm4Wxn7Sitse6yb3NQp2fwh4hxLdiyLzL2Cbas6G2I+FDlOMU5QAEwNHfX7lCu6sYvs70w6So5bOmAd6vbQDIPLplbFKlS/ziPUPHR88ePxTSUMhIKNuzB6AihXFkZggGfmuYdTQRB4ECOgUEXFGShUuXAzOTPIkypUoGzp9AmwQBACH5BAULABYALAAABAAgABYAhN/l7uDl7uHm7+Ln7+Pn8OPo8OTo8OXp8ebq8ufr8ujr8+rt9Ovt9Ovu9O/y9vDy9vDz9/Hz9/H0+PL0+PP1+PT2+f///wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXLoCWOZGmeaKqubOu+6BRBjgNBExnt9Z6PhgJgWCgYZLebRKLjOXYRUnFaNNgm2MmN9IxUKjxpIUFOCG3fitbB9X5l7NEwsViYAdd0JC56Ut41JABjDmRnOF9hIz1ve4JjdXdoenwWT2lwggB0dkNPE4mBixGgoY+ckhCYon2kjZWDqIelmaO0jnKQdrOvXA6lFLgisZECADdYYDttoMHCFgACZQhCEklJPyJQEFBRI9RBAkZH1jW/2RZY5l0kCQbG0QUIMPT19vf49CEAIfkEABQAAAAsMwARABEAHgCD7vL27/L28PL28PP28PP38fP38fT38fT48vT48vX48/X49Pb59fb5AAAAAAAAAAAABIwwoTmAtWPMnSStFZBtZJaJ4hCQiEZtmgbAbL1dFtct3uzLiMRiuFBMLqGZhjgkITNCJu+Ig0aZlOfkSsw+d1JvagAmSk4oQIfbTGFG7A76UjaLTfVmK2mVnvlkbHooIIF+LTgiBnkLN1+CVG+LbJEnfXaOeCRrPWMuNggrMzBKLS+glSegPlqoiSgkEQA7">
+    </div>
+    </form>
+  </div>
+
+  <div class="sidebar bottom">
+    <div class="secondary">Logged in as:</div>
+    <div class="fb-profile-card">
+      <img src="<?= me.picture.data.url ?>">
+      <?= me.name ?>
+      <small class="fb-profile-card-logout">
+        (<a onclick="google.script.run.withSuccessHandler(function(){google.script.host.close()}).FbSdkLogout();">Log out</a>)
+      </small>
+    </div>
+  </div>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script>
+$(function() {
+  var $scopeSelector = $('select[name="scope"]');
+  var $pageSelector = $('select[name="page"]');
+  var $numberN = $('#number-n');
+  var $canonicalUrl = $('#canonical-url');
+
+  var $submitButton = $('input[name="submit"]');
+
+  $scopeSelector
+  .on('change', function () {
+    $('[data-hidden-scopes]').show();
+    $('[data-hidden-scopes~="'+$(this).val()+'"]').hide();
+  })
+  .trigger('change');
+
+  $pageSelector
+  .on('change', function () {
+    var $selectedPageOption = $(this).children('option:selected');
+
+    // Free-form Page-ID.
+    if ($selectedPageOption.val() === '') {
+      $('input[name="page-id"]')
+      .val('')
+      //.val('228735667216')
+      .attr('type', 'text');
+      $('#page-picture').hide();
+    } else {
+      $('input[name="page-id"]')
+      .val($selectedPageOption.val())
+      .attr('type', 'hidden');
+
+      var pictureUrl = $selectedPageOption.data('picture');
+      var linkUrl = $selectedPageOption.data('link');
+      var vanityUrl = (new URL(linkUrl)).pathname.replace(/\//g, '');
+
+      $('#page-picture')
+      .attr('src', pictureUrl)
+      .show()
+      .parent()
+      .attr('title', vanityUrl)
+      .attr('href', linkUrl);
+    }
+  })
+  .trigger('change');
+
+////////////////////////////////////////////////////////////////////////////////
+
+  setDateOfRangeWithDayOffset($('input[name="rangeStart"]'), '-8');
+  setDateOfRangeWithDayOffset($('input[name="rangeEnd"]'), '-1');
+
+  $('.date-shortcut a').on('click', function (){
+    var offset = $(this).data('date-offset');
+
+    setDateOfRangeWithDayOffset($(this).closest('label').siblings('input[type="date"]'), offset);
+  });
+
+////////////////////////////////////////////////////////////////////////////////
+
+  $submitButton.on('click', function () {
+    google.script.run
+    .withSuccessHandler(function () {
+      $submitButton.prop('disabled', false);
+      $('#throbber').hide();
+    })
+    .withFailureHandler(function () {
+      $submitButton.prop('disabled', false);
+      $('#throbber').hide();
+    })
+    .submitReport($('form').get(0));
+
+    $submitButton.prop('disabled', true);
+    $('#throbber').show();
+  });
+
+////////////////////////////////////////////////////////////////////////////////
+
+  google.script.run
+  .withSuccessHandler(function (pages) {
+    for(var page of pages) {
+      if (page.supports_instant_articles) {
+        $pageSelector.append(
+          $('<option>')
+          .text(page.name)
+          .attr('value', page.id)
+          .data('picture', page.picture.data.url)
+          .data('link', page.link)
+        );
+      }
+    }
+    $pageSelector.trigger('change')
+   })
+   .fetchMyPages();
+
+  google.script.run
+  .withSuccessHandler(function (obj){
+    //console.log(obj)
+  })
+  .getUserProperties();
+});
+
+function setDateOfRangeWithDayOffset($el, offset) {
+  var dateOffset = (function(d){ d.setDate(d.getDate() + parseInt(offset)); return d})(new Date);
+
+  $el.get(0).valueAsDate = dateOffset;
+}
+</script>
+
+<img height=1 width=1 alt="" style="display:none" src="https://www.facebook.com/tr?id=444911359182314&ev=ViewContent&cd[content_name]=ia-insights&cd[content_category]=sidebar" />
+<img height=1 width=1 alt="" style="display:none" src="https://www.facebook.com/tr?id=165010617304976&ev=ViewContent&cd[content_name]=ia-insights&cd[content_category]=sidebar" />
+
+</body>
+</html>
